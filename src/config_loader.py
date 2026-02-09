@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared config loader — reads config/config.json from project root."""
+"""Sycope Traffic Recorder — shared config loader."""
 
 import base64
 import hmac

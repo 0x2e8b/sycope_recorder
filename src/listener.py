@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Configurable webhook listener for Sycope alerts -> npcapextract
+Sycope Traffic Recorder — webhook listener
+
+Receives Sycope alert webhooks and extracts matching packets from
+continuously recorded PCAPs using npcapextract.
 
 URL parameters:
   filter: full|hosts|client|server|port
@@ -14,9 +17,9 @@ URL parameters:
   after:  seconds after alert (default: 60)
 
 Examples:
-  http://n2disk:8888/extract?filter=full&before=30&after=60
-  http://n2disk:8888/extract?filter=hosts&before=60&after=120
-  http://n2disk:8888/extract?filter=server&before=10&after=30
+  http://recorder:8888/extract?filter=full&before=30&after=60
+  http://recorder:8888/extract?filter=hosts&before=60&after=120
+  http://recorder:8888/extract?filter=server&before=10&after=30
 """
 
 import json

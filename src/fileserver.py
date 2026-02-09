@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Simple HTTP file server for PCAP files"""
+"""Sycope Traffic Recorder — HTTP file server for extracted PCAPs"""
 
 import ipaddress
 from functools import partial
