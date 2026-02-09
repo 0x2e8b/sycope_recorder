@@ -1,6 +1,26 @@
 # Sycope Traffic Recorder
 
-On-demand PCAP extraction triggered by Sycope alerts, backed by continuous packet recording.
+On-demand PCAP extraction triggered by Sycope alerts, backed by continuous packet recording (n2disk + npcapextract).
+
+![Python](https://img.shields.io/badge/python-3.6%2B-blue)
+![Platform](https://img.shields.io/badge/platform-linux-lightgrey)
+![n2disk](https://img.shields.io/badge/n2disk-required-orange)
+![npcapextract](https://img.shields.io/badge/npcapextract-required-orange)
+
+## Contents
+
+- [Purpose](#purpose)
+- [Requirements](#requirements)
+- [Project Structure](#project-structure)
+- [Configuration](#configuration)
+- [Components](#components)
+- [Quickstart](#quickstart)
+- [Systemd Units](#systemd-units)
+- [Sycope Webhook](#sycope-webhook)
+- [Example Payload](#example-payload)
+- [How It Works](#how-it-works)
+- [Troubleshooting](#troubleshooting)
+- [Demo / Replay](#demo--replay)
 
 ## Purpose
 
@@ -66,7 +86,7 @@ All runtime settings are in `config/config.json`:
 | `src/listener.py` | 8888 | Receives webhook POST from Sycope, extracts matching packets, returns URL to PCAP |
 | `src/fileserver.py` | 8081 | Serves extracted PCAP files over HTTP |
 
-## Setup
+## Quickstart
 
 ### n2disk (required dependency)
 
@@ -79,7 +99,7 @@ systemctl daemon-reload
 systemctl enable --now n2disk
 ```
 
-### Sycope Traffic Recorder services
+### Run Services
 
 ```bash
 python3 src/listener.py &
@@ -90,7 +110,7 @@ python3 src/fileserver.py &
 > The fileserver supports optional IP allowlisting (`allowed_ips`) and directory listing is disabled by default.
 > If `max_concurrent_extractions` is exceeded, the listener responds with HTTP `429` and a `Retry-After: 5` header.
 
-### Recorder services (systemd)
+## Systemd Units
 
 Optional systemd units to keep the recorder running after reboots:
 
@@ -133,7 +153,7 @@ systemctl daemon-reload
 systemctl enable --now pcap-listener pcap-fileserver
 ```
 
-### Sycope configuration
+## Sycope Webhook
 
 In Sycope, add a webhook action pointing to the recorder:
 
@@ -143,10 +163,18 @@ POST http://<RECORDER_IP>:8888/extract?filter=full&before=360&after=360
 
 Available filter modes: `full`, `hosts`, `client`, `server`, `port`. The `before`/`after` parameters define the extraction time window (in seconds) relative to the alert timestamp.
 
+| Mode | Includes |
+|------|----------|
+| `full` | client IP + server IP + port |
+| `hosts` | client IP + server IP |
+| `client` | client IP only |
+| `server` | server IP only |
+| `port` | server IP + port |
+
 If you enabled listener basic auth in `config/config.json`, set **basicAuth** in Sycope with the same username/password.
 Fileserver uses its own credentials (`fileserver_auth_user` / `fileserver_auth_pass`).
 
-### Example alert payload
+## Example Payload
 
 ```json
 {
@@ -160,7 +188,7 @@ Fileserver uses its own credentials (`fileserver_auth_user` / `fileserver_auth_p
 }
 ```
 
-## How it works
+## How It Works
 
 ```
 Network traffic
@@ -185,7 +213,7 @@ Sycope alert            │
 - **HTTP 429**: too many concurrent extractions; increase `max_concurrent_extractions` or retry later.
 - **Permission errors**: ensure the service user can read `timeline_dir` and write to `output_dir`. The rolling directory is owned by `n2disk:ntop` — the service user must be in the `ntop` group.
 
-## Demo / replay (optional)
+## Demo / Replay (optional)
 
 `src/netflow_replay.py` replays NetFlow v9 packets from a PCAP to a Sycope collector for demo purposes.
 Update `PCAP_FILE`, `SYCOPE_IP`, and `SYCOPE_PORT` inside the script before running.
